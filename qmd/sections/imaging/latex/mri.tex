@@ -1,0 +1,50 @@
+\subsection{MRI Structural Findings}
+
+The MRI scan used in this study is reviewed by a radiologist, below are the
+radiologist's findings. However, this is not a standard clinical or diagnostic
+scan and is intended for research purposes only. If there is an incidental
+finding that is detected on your scan that could potentially be relevant for
+your medical care, you will be notified, so that you may follow up with your
+health care provider.
+
+\textbf{BELOW ARE IMAGES OF THE INSIDE OF YOUR BRAIN}
+
+\textbf{Date of Scan}: {{scanDate}}
+
+\setlength{\arrayrulewidth}{0.65mm}
+
+\begin{table}[h!]
+    \centering
+    \begingroup
+    \setlength{\tabcolsep}{10pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{cc}
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \begin{tikzpicture}
+                \node[inner sep=0pt] (axial) {\includegraphics[width=\linewidth]{{axialImage}}};
+                \node[anchor=south] at ([yshift=12pt]axial.north) {\normalsize \textbf{\strut {{axialTop}}}};
+                \node[anchor=north] at ([yshift=-12pt]axial.south) {\normalsize \textbf{\strut {{axialBottom}}}};
+            \end{tikzpicture}
+            \\[6pt] \textbf{Axial view}
+        \end{minipage}
+        &
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \begin{tikzpicture}
+                \node[inner sep=0pt] (sagittal) {\includegraphics[width=\linewidth]{{sagittalImage}}};
+                % Invisible top/bottom placeholders to match axial height
+                \node[anchor=south, opacity=0] at ([yshift=12pt]sagittal.north) {\normalsize \textbf{\strut {{sagittalLeft}}}};
+                \node[anchor=north, opacity=0] at ([yshift=-12pt]sagittal.south) {\normalsize \textbf{\strut {{sagittalRight}}}};
+                \node[anchor=east, rotate=90] at ([xshift=-12pt]sagittal.west) {\normalsize \textbf{\strut {{sagittalLeft}}}};
+                \node[anchor=west, rotate=-90] at ([xshift=12pt]sagittal.east) {\normalsize \textbf{\strut {{sagittalRight}}}};
+                % Top/Bottom intentionally omitted for sagittal
+            \end{tikzpicture}
+            \\[6pt] \textbf{Sagittal view}
+        \end{minipage}
+        \\ \hline
+        \multicolumn{2}{c}{\parbox{0.9\textwidth}{\raggedright \vspace*{5mm} \textbf{Radiology Read}: {{radiologyRead}} \vspace*{5mm}}}
+        \\ \hline
+    \end{tabular}
+    \endgroup
+\end{table}

@@ -1,0 +1,39 @@
+
+```{r calculate ptau categories}
+#| echo: false
+#| eval: !expr params$kuadrc_blood
+#| results: asis
+
+BRIDGE21::format_quarto(
+  "UNDERSTANDING YOUR ALZHEIMER'S DISEASE RISK",
+  type = "section"
+)
+
+ptau <- BRIDGE21::get_database_values(
+  ptau217_date,
+  ptau217_pgml,
+  data = data
+)
+
+if (rlang::is_empty(ptau)) {
+  params$kuadrc_ptau217 <- FALSE
+}
+
+karyotype <- BRIDGE21::get_database_values(
+  dschrom,
+  chromsm_source,
+  data = data
+)
+
+if (rlang::is_empty(karyotype)) {
+  params$kuadrc_karyotype <- FALSE
+}
+
+```
+
+{{< include sections/blood/components/ptau217.qmd >}}
+
+
+{{< include sections/blood/components/karyotype.qmd >}}
+
+{{< include sections/blood/components/apoe.qmd >}}

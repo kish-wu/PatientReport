@@ -1,0 +1,58 @@
+
+```{r display text and plot for the accelerometer data for the kuadrc cohort}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_activity
+
+accel_df_subset <- BRIDGE21:::retrieve_accel_summary(data = accel_df)
+
+paSleepSuccess <- sum(
+  accel_df_subset$dur_spt_min >= 480 &
+    accel_df_subset$dur_day_total_MVPA_min >= 30
+)
+
+ltexPA <- paste(
+  readLines("sections/lifestyle/latex/activity.tex"),
+  collapse = "\n"
+)
+ltexPA <- glue::glue(
+  ltexPA,
+  paSleepSuccess = paste0("{", paSleepSuccess, "}"),
+  accelDaysMonitored = paste0("{", nrow(accel_df), "}"),
+  .open = "{{",
+  .close = "}}"
+)
+cat(paste0("", ltexPA, ""), sep = "\n")
+
+
+load(list.files(
+  file.path(accelMetaDir, "ms2.out"),
+  recursive = TRUE,
+  full.names = TRUE
+))
+IMPdates <- unique(as.Date(IMP$metashort$timestamp))
+IMPremove <- IMPdates[
+  !IMPdates %in% as.Date(accel_df_subset$date, "%m/%d/%Y")
+]
+IMP$metashort <- IMP$metashort[
+  !as.Date(IMP$metashort$timestamp) %in% IMPremove,
+]
+accel_plot <- BRIDGE21::plot_time_series_by_date(
+  IMP,
+  summary_data = accel_df_subset
+)
+
+ggplot2::ggsave(
+  filename = "accelerometer_plot.png",
+  accel_plot,
+  width = 11,
+  height = 8,
+  dpi = 300
+)
+
+paste("", "![](accelerometer_plot.png)", "") |>
+  cat(sep = "\n")
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```

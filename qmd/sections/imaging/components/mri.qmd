@@ -1,0 +1,72 @@
+```{r mri imaging}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_mri
+
+imageFiles <- list.files(
+  params$imagedir,
+  pattern = ".png$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+axialImage <- paste0("{", imageFiles[grep("axial", imageFiles)], "}")
+sagittalImage <- paste0("{", imageFiles[grep("sagittal", imageFiles)], "}")
+
+orientation_file <- file.path(params$imagedir, "orientation.yaml")
+default_orientation <- list(
+  axial = list(top = "Front", bottom = "Back", left = "", right = ""),
+  sagittal = list(top = "", bottom = "", left = "Front", right = "Back")
+)
+
+if (file.exists(orientation_file)) {
+  user_orientation <- yaml::read_yaml(orientation_file)
+  orientation <- utils::modifyList(default_orientation, user_orientation)
+} else {
+  orientation <- default_orientation
+}
+
+imaging <- BRIDGE21::get_database_values(
+  redcap_repeat_instrument,
+  scan_date,
+  radiology_read,
+  data = data,
+  event_name = redcap_event_name
+)
+
+
+scanDate <- format(
+  as.Date(imaging$scan_date, tryFormats = c("%m/%d/%y", "%m/%d/%Y")),
+  "%B %d, %Y"
+)
+
+radiologyRead <- paste0("{", imaging$radiology_read, "}")
+
+if (length(imageFiles) >= 1) {
+  ltex <- paste(
+    #readLines("inst/qmd/sections/imaging/latex/mri.tex"),
+    readLines("sections/imaging/latex/mri.tex"),
+    collapse = "\n"
+  )
+  ltex <- glue::glue(
+    ltex,
+    scanDate = scanDate,
+    axialImage = axialImage,
+    sagittalImage = sagittalImage,
+    radiologyRead = radiologyRead,
+    axialTop = orientation$axial$top,
+    axialBottom = orientation$axial$bottom,
+    axialLeft = orientation$axial$left,
+    axialRight = orientation$axial$right,
+    sagittalTop = orientation$sagittal$top,
+    sagittalBottom = orientation$sagittal$bottom,
+    sagittalLeft = orientation$sagittal$left,
+    sagittalRight = orientation$sagittal$right,
+    .open = "{{",
+    .close = "}}"
+  )
+  cat(paste0("", ltex, ""), sep = "\n")
+}
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```

@@ -1,104 +1,58 @@
- # Report Generation Custom Pipeline 
+# BRIDGE21 Report Pipeline (Custom Wrapper)
 
-  ## Overview
-  This folder holds our custom BRIDGE21 reporting pipeline. Adapted from https://github.com/bhelsel/BRIDGE21.git
+## What this repo is for
+Generate participant-facing PDF reports. It can run on real study data (pulling MRI from XNAT and processing accelerometer files) or on the bundled toy example.
 
-  ## Key Scripts
-  - main.R — Entry point. Loops over `xnat_subjects` (from xnat_config.R), calls `generate_report_custom()`,
-  and writes to `participant_reports/<id>/`.
-  - connet.xnat.R - Provides helpers to establish a connection/session to the XNAT host using stored credentials.
-  - generate_report_custom.R — Core orchestrator. Sources helpers, selects report sections, handles images
-  (example placeholders or XNAT), accelerometer paths, writes `_variables.yaml`, and invokes Quarto CLI to
-  produce the PDF.
-  - xnat_config.R — User/Pass and `xnat_subjects` list.
-  - process_xnat_scans.R — XNAT pull: project/subject/experiment/scan lookup → download zip → unzip DICOM →
-  convert to NIfTI → axial/sagittal PNGs.
-  - xnat_utils.R — HTTR helpers for XNAT REST and DICOM/NIfTI I/O.
-  - run_ggir.R — Runs GGIR on `.gt3x` accelerometer data and writes `accelerometer/data` and `accelerometer/
-  results`.
-  - utils.R — Helpers (`get_database_values`, `add_string`, `format_quarto`, `expand_reports`, accelerometer
-  summary).
-  - global_vars.R — Report section definitions (`.allReports`, `.subReports`).
-  - Plotting helpers (used by QMDs): `plot_blood_pressure.R`, `plot_time_series_by_date.R`,
-  `plot_bmi_weight.R`, `plot_dxa.R`, `save_xnat_images.R`, etc.
+## Key scripts (what/why)
+- `R/generate_report_custom.R`: Orchestrator. Sources helpers, chooses sections, copies QMD project, writes `_variables.yaml`, triggers MRI Shiny apps (slice picker + orientation), then renders the PDF.
+- `R/global_vars.R`: Report section definitions (`.allReports`, `.subReports`).
+- `R/utils.R`: Helper functions used by QMDs (formatting, data extraction, etc.).
+- `R/run_ggir.R`: Runs GGIR on `.gt3x` accelerometer files.
+- `R/MRI_imgs/process_xnat_scans.R`: Pulls MRI from XNAT, converts DICOM → NIfTI → PNG.
+- `R/MRI_imgs/xnat_utils.R`: HTTR helpers for XNAT REST + DICOM/NIfTI I/O.
+- `R/MRI_imgs/adjust_mri_images.R`: Shiny app to pick/brighten slices from a NIfTI, saves axial/sagittal PNGs.
+- `R/MRI_imgs/orient_mri_app.R`: Shiny app to rotate/flip PNGs and save orientation labels.
+- `R/MRI_imgs/xnat_config.R`: Your XNAT credentials and `xnat_subjects` list.
+- `qmd/BRIDGE21.qmd` + `qmd/sections/*`: Quarto project templates used for rendering.
+- `extdata/toy_data.csv`: Example participant data (schema reference).
 
-  ## Data Inputs
-  - Participant CSV: see `extdata/toy_data.csv` for schema (~102 cols). Required fields include:
-    - IDs/dates: `ptid`, `coenrol_studyid`, `redcap_event_name`, `redcap_repeat_instrument`, `visitmo/
-  visitday/visityr`, `subject_birthdate`, `final_impression`.
-    - Demographics: `subject_fname`, `subject_lname`, `sex`.
-    - Cognition: DSMSE (`dsmsett2`, `dsvistt2`, `dssmtot2`, `dsmmtot2`, `dslgtot2`), MCRT (`dscrttfr`,
-  `dsccttcr`), NTG-EDSD items `dsadl1`–`dsother6`.
-    - Imaging: `scan_date`, `radiology_read`, `centiloid_apet`, `img_scan_date_apet`.
-    - Blood: `ptau217_date`, `ptau217_pgml`, `dschrom`, `chromsm_source`, `ku_apoe1`, `ku_apoe2`.
-    - Lifestyle/anthro: `bpsys`, `bpdias`, `height`, `weight`, `fittest_date`, `mass`, `lean`, `fat`,
-  `total_fat`, `dxa_bmd_z`.
-  - Accelerometer (optional): folder with `.gt3x` files or the bundled example at `extdata/accelerometer`.
-  - MRI images:
-    - images pulled from XNAT 
+## Quick start: example run with pop-ups
+1) Run (from repo root):
+   ```
+   Rscript -e "source('R/generate_report_custom.R'); generate_report_custom(id='10001', datafile='extdata/toy_data.csv', outputdir=file.path(getwd(),'participant_reports'), example_report=TRUE, adjust_images=TRUE)"
+   ```
+   - You will get two browser pop-ups: slice picker (save/close) then orientation (save/close).
+   - Output: `participant_reports/test_jayhawk/test_jayhawk_Report.pdf`.
 
+## Running on real data
+1) Configure XNAT: edit `R/MRI_imgs/xnat_config.R` with `xnat_user`, `xnat_pass`, and `xnat_subjects`.
+2) Prepare inputs:
+   - `datafile`: your study CSV matching the `extdata/toy_data.csv` schema (IDs/dates, demographics, cognition DSMSE/MCRT/NTG-EDSD fields, imaging fields, blood markers, lifestyle/anthro).
+   - `acceldir` (optional): folder containing `.gt3x` files; else set `acceldir=NULL`.
+3) Run per subject:
+   ```
+   Rscript -e "source('R/generate_report_custom.R'); generate_report_custom(id='SUBJ001', datafile='/path/to/data.csv', outputdir=file.path(getwd(),'participant_reports'), acceldir='/path/to/gt3x' , example_report=FALSE, adjust_images=TRUE)"
+   ```
+   - For multiple IDs, loop over them in the same style.
+   - Imaging: pulls from XNAT using your credentials; if no MRI is available, the Shiny apps are skipped.
+   - If not skipped, you will get two browser pop-ups: manually do slice picker (save/close) then orientation (save/close).
+   - Accelerometer: processed via GGIR if `acceldir` provided.
 
-  ## Quarto Project
-  - Source: `qmd/BRIDGE21.qmd` plus `qmd/sections/...`.
-  - Template/theme: `_extensions/BRIDGE21/mytemplate.tex`, logos in `_extensions/BRIDGE21/logos/`.
-  - Uses installed R package `BRIDGE21` (install from repo root: `Rscript -e "install.packages('.',
-  repos=NULL, type='source')"`).
+## What happens 
+- Sources helpers (`global_vars.R`, `utils.R`, `run_ggir.R`, `process_xnat_scans.R`, `xnat_config.R`).
+- Resolves which report sections to render (all by default).
+- Reads CSV and subsets by `id`; validates the ID exists unless `example_report=TRUE`.
+- MRI:
+  - Example: copies canned PNGs/NIfTI if present.
+  - Real: downloads DICOM from XNAT → converts to NIfTI → PNGs → launches slice picker → launches orientation app → saves `orientation.yaml`.
+- Accelerometer: copies/runs GGIR if data provided; otherwise skipped.
+- Copies QMD project to a temp dir, writes `_variables.yaml`, renders PDF, and writes outputs to `participant_reports/<id>/`.
 
-  ## Workflow 
-    - Install the package from the repo root (once):
-    Rscript -e "install.packages('.', repos=NULL, type='source')"
-    - Ensure Quarto CLI is installed and on PATH (quarto --version).
+## Outputs
+- `participant_reports/<id>/<id>_Report.pdf`
+- `participant_reports/<id>/_variables.yaml`
+- Imaging under `participant_reports/<id>/imaging/`
+- Accelerometer (if processed) under `participant_reports/<id>/accelerometer/`
 
-    #### Configure XNAT credentials and subjects
-
-  - Edit R/xnat_config.R 
-      - xnat_user <- "<your username>"
-      - xnat_pass <- "<your password>"
-      - xnat_subjects <- c("SUBJ001", "SUBJ002", ...)
-  - Optional: if you want to sanity-check credentials and pre-download images, run Rscript -e "source('R/connect_xnat.R')":
-      - What it does: uses xnat_utils.R HTTR helpers to log in with your user/pwd, resolve the project
-        (Alzheimers Biomarkers Consortium Down Syndrome ABC-DS), pull each subject’s MRI scan (series
-        “Accelerated Sagittal IR-FSPGR”), download the DICOM zip, convert to NIfTI, and save axial/sagittal
-        PNGs to output_images/. This is a standalone prefetch step; the main pipeline also downloads images
-        automatically if you skip this.
-        #### Prepare your real CSV
-
-  - Provide a CSV with the expected schema (same columns as extdata/example.csv): demographics (name,
-    birthdate, visit date, sex, final_impression), cognition (DSMSE/MCRT fields, NTG-EDSD dsadl1–
-    dsother6), imaging fields (scan_date, radiology_read, centiloid_apet, img_scan_date_apet), blood markers
-    (ptau217_date, ptau217_pgml, dschrom, chromsm_source, ku_apoe1/2), lifestyle/anthro (bpsys, bpdias,
-    height, weight, fittest_date, mass, lean, fat, total_fat, dxa_bmd_z), etc. 
-    (e.g., /path/to/data.csv).
-
-       Prepare accelerometer input
-
-  - If you have .gt3x files, place them in a folder and note the path (to pass as acceldir). If none, set
-    acceldir = NULL to skip activity plots.
-
-        #### Run the pipeline
-
-  - From the repo root, in R:
-
-    source("R/main.R")  # or directly call generate_report_custom for a single ID:
-    report_path <- generate_report_custom(
-      id = "SUBJ001",
-      datafile = "/path/to/data.csv",
-      outputdir = file.path(getwd(), "participant_reports"),
-      acceldir = "/path/to/gt3x/folder",  # or NULL
-      reports = NULL,                     # all sections
-      example_report = FALSE              # real data + XNAT pull
-    )
-  - What happens inside:
-      - Sources helpers (global_vars.R, utils.R, run_ggir.R, process_xnat_scans.R, xnat_config.R).
-      - Resolves reports to render (all by default).
-      - Reads your CSV, subsets by id.
-      - Downloads MRI via XNAT (using your user/pwd) and converts to axial/sagittal PNGs in
-        participant_reports/<id>/imaging/.
-      - Processes accelerometer if acceldir is provided; otherwise skips.
-      - Writes _variables.yaml and calls Quarto CLI to render the PDF.
-
-    #### Render and outputs
-
-  - The pipeline writes the PDF to participant_reports/<id>/<id>_Report.pdf and keeps _variables.yaml
-    alongside it. Imaging PNGs live under participant_reports/<id>/imaging/; accelerometer outputs (if any)
-    under participant_reports/<id>/accelerometer/.
+## Notes
+- `R/main.R` and `R/run_pipeline.R` are present but may be blocked by environment restrictions here (processx/Quarto/port binding). Use the `Rscript -e "source(...); generate_report_custom(...)"` pattern above; it works end-to-end with Shiny pop-ups and rendering.

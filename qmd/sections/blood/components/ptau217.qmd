@@ -1,0 +1,73 @@
+
+
+
+```{r display blood results for pTau 217 from the kuadrc cohort, ft.align="left"}
+#| echo: false
+#| eval: !expr params$kuadrc_ptau217
+#| results: asis
+
+ptau$ptau217_date <- format(
+  as.Date(ptau$ptau217_date, tryFormats = c("%m/%d/%y", "%m/%d/%Y")),
+  "%m/%d/%Y"
+)
+
+# < 0.4 “Negative --  AD pathology not indicated” Not elevated
+# ≥ 0.4 to ≤ 0.62  “Intermediate --  AD pathology possible” Intermediate
+# ≥ 0.63 “Positive --  AD pathology likely” Elevated
+
+ptau$category <- cut(
+  ptau$ptau217_pgml,
+  breaks = c(-Inf, 0.4, 0.63, Inf),
+  labels = c("Not Elevated", "Intermediate", "Elevated"),
+  right = FALSE
+)
+
+ptau$ptau217_pgml <- round(ptau$ptau217_pgml, 2)
+
+ptau$interpretation <-
+  factor(
+    ptau$category,
+    levels = c("Not Elevated", "Intermediate", "Elevated"),
+    labels = c(
+      "Negative: Alzheimer's disease pathology not indicated",
+      "Intermediate: Alzheimer's disease pathology possible",
+      "Positive: Alzheimer's disease pathology likely"
+    )
+  )
+
+BRIDGE21::format_quarto("sections/blood/latex/proteins.tex", type = "input")
+
+flextable::flextable(ptau) %>%
+  flextable::set_header_labels(
+    values = c(
+      "Date",
+      "pTau 217",
+      "Category",
+      "Interpretation"
+    )
+  ) %>%
+  flextable::width(j = 1:2, width = 0.75) %>%
+  flextable::width(j = 3, width = 1) %>%
+  flextable::width(j = 4, width = 4) %>%
+  flextable::align(j = 1:4, part = "all", align = "center") %>%
+  flextable::add_footer_row(
+    values = "pTau 217 is measured in pg/ml",
+    colwidths = 4
+  ) %>%
+  flextable::add_header_row(
+    values = "Plasma 217 Results and Interpretation",
+    colwidths = 4
+  ) %>%
+  flextable::align(i = 1, part = "head", align = "left") %>%
+  flextable::border(
+    i = 1,
+    part = "head",
+    border = list("width" = 0, color = "black", style = "solid")
+  )
+
+
+BRIDGE21::format_quarto("sections/blood/latex/after-tau.tex", type = "input")
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```

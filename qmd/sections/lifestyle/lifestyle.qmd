@@ -1,0 +1,85 @@
+---
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r controller to determine what lifestyle sections would have data for the kuadrc cohort}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_lifestyle
+
+BRIDGE21::format_quarto("LIFESTYLE AND DISEASE RISK", type = "section")
+
+BRIDGE21::format_quarto(
+  BRIDGE21::add_string(
+    "We assessed various measures that can affect your overall brain health. " +
+      "Recent research suggests that a healthy lifestyle is a key components of brain health."
+  ),
+  type = "strwrap"
+)
+
+blood_pressure <-
+  BRIDGE21::get_database_values(
+    bpsys,
+    bpdias,
+    data = data
+  )
+
+if (rlang::is_empty(blood_pressure)) {
+  params$kuadrc_blood_pressure <- FALSE
+}
+
+if (!is.null(params$accelres)) {
+  accel_df <- tryCatch(
+    {
+      accelMetaDir <- file.path(params$accelres, "output_data", "meta")
+      accelResDir <- file.path(params$accelres, "output_data", "results")
+      dayMMFile <- list.files(accelResDir, "day.*MM", full.names = TRUE)
+      readr::read_csv(dayMMFile, show_col_types = FALSE)
+    },
+    error = function(e) {
+      params$kuadrc_activity <- FALSE
+    }
+  )
+} else {
+  params$kuadrc_activity <- FALSE
+}
+
+anthro <- BRIDGE21::get_database_values(
+  weight,
+  height,
+  data = data
+)
+
+missing_bmi <- (length(anthro$weight) == 0 | length(anthro$height) == 0) &
+  length((anthro$weight) != length(anthro$height))
+
+if (missing_bmi) {
+  params$kuadrc_bmi <- FALSE
+}
+
+dxa <-
+  BRIDGE21::get_database_values(
+    fittest_date,
+    mass,
+    lean,
+    fat,
+    total_fat,
+    dxa_bmd_z,
+    data = data
+  )
+
+if (nrow(dxa) == 0) {
+  params$kuadrc_dxa <- FALSE
+}
+
+```
+
+{{< include sections/lifestyle/components/bp.qmd >}}
+
+{{< include sections/lifestyle/components/activity.qmd >}}
+
+{{< include sections/lifestyle/components/bmi.qmd >}}
+
+{{< include sections/lifestyle/components/dxa.qmd >}}
+

@@ -1,0 +1,33 @@
+
+```{r karyotype results}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_karyotype
+
+karyotype <- karyotype %>%
+  dplyr::mutate(
+    dschrom_label = factor(
+      dschrom,
+      levels = 1:3,
+      labels = c("Trisomy 21", "Translocation", "Mosaic")
+    ),
+    chromsm_source_label = factor(
+      chromsm_source,
+      levels = c("IU", "medrec", "copartic"),
+      labels = c(
+        "Indiana University",
+        "Medical Record",
+        "Parent or Care Partner Reported"
+      )
+    )
+  )
+
+karyotype <- karyotype[!duplicated(karyotype), ]
+
+if (!is.na(karyotype$dschrom_label)) {
+  BRIDGE21::format_quarto("sections/blood/latex/karyotype.tex", type = "input")
+  cat("\\textbf{Karyotype Result}: ", as.character(karyotype$dschrom_label))
+  BRIDGE21::format_quarto(type = "newpage")
+}
+
+```

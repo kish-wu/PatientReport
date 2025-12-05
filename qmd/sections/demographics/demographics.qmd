@@ -1,0 +1,92 @@
+
+```{r extract person information from kuadrc cohort used for other parts of the report}
+#| echo: false
+#| eval: !expr (any(params[grepl("kuadrc", names(params))] == TRUE))
+
+intake <- BRIDGE21::get_database_values(
+  subject_fname,
+  subject_lname,
+  subject_birthdate,
+  data = data,
+  event_name = redcap_event_name
+)
+
+intake$subject_birthdate <- as.Date(
+  intake$subject_birthdate,
+  tryFormats = c("%m/%d/%y", "%m/%d/%Y")
+)
+
+visit <- BRIDGE21::get_database_values(
+  visitmo,
+  visitday,
+  visityr,
+  sex,
+  final_impression,
+  data = data,
+  event_name = redcap_event_name
+)
+
+visit$date_of_visit <- as.Date(
+  BRIDGE21::add_string(
+    visit$visityr + "/" + visit$visitmo + "/" + visit$visitday
+  )
+)
+
+visit$formatted_date_of_visit <- format(visit$date_of_visit, "%m/%d/%Y")
+
+visit$age_at_visit <- floor(
+  as.numeric(visit$date_of_visit - intake$subject_birthdate) / 365.25
+)
+
+```
+
+```{r display person information in a table format for kuadrc cohort}
+#| echo: false
+#| eval: !expr params$kuadrc_demographics
+#| results: asis
+
+BRIDGE21::format_quarto("SUMMARY OF YOUR STUDY VISIT", type = "section")
+
+BRIDGE21::format_quarto("Physician Assessment and Note", type = "subsection")
+
+BRIDGE21::format_quarto(
+  BRIDGE21::add_string(
+    "Each time you are seen, we have a team of clinicians review " +
+      "your cognitive assessments, questionnaires your study partner answered, and clinical information. " +
+      "Below is the clinician’s feedback from your last visit. "
+  ),
+  type = "strwrap"
+)
+
+name <- BRIDGE21::add_string("Name: ")
+lastvisit <- BRIDGE21::add_string(
+  "Last Visit: " + format(max(visit$date_of_visit), "%B %d, %Y")
+)
+age <- BRIDGE21::add_string("Age: " + max(visit$age_at_visit) + " Years")
+
+subjinfo_df <- data.frame(col1 = c(name, lastvisit), col2 = c(age, ""))
+
+flextable::flextable(subjinfo_df) %>%
+  flextable::width(j = 1, width = 4) %>%
+  flextable::width(j = 2, width = 2.75) %>%
+  flextable::delete_part(part = "header") %>%
+  flextable::border_remove() %>%
+  flextable::fontsize(j = 1:2, size = 11) %>%
+  flextable::add_footer_row(
+    values = visit$final_impression[length(visit$final_impression)],
+    colwidths = 2
+  )
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```
+
+
+
+```{r add person information from the bold study}
+#| echo: false
+#| eval: !expr params$bold_demographics
+
+# Add bold demographics here...
+
+```

@@ -1,0 +1,23 @@
+<!--- Diet Questionnaire --->
+
+```{r diet questionnaire, ft.align = "left"}
+#| echo: false
+#| results: asis
+#| include: false
+
+# load(system.file("extdata/constants.RData", package = "ncidsq"))
+
+# ncidsqvars <- constants$fm_equation_coeff$variable[!grepl("_low|_high", constants$fm_equation_coeff$variable)]
+
+# dsqdata <-
+#   ncidsq::get_dsq(
+#     data = df, id = "ptid", timepoint = "redcap_event_name",
+#     birthdate = "subject_birthdate", reference = "kumc",
+#     visitdate = c("visityr", "visitmo", "visitday")) %>%
+#     dplyr::select(ptid, visitdate, sex, dplyr::all_of(ncidsqvars)) %>%
+#     dplyr::filter(!dplyr::if_all(dplyr::all_of(ncidsqvars), is.na))
+
+# paste("", "\\input{sections/lifestyle/latex/diet.tex}", "") |>
+#     cat(sep = "\n")
+
+```

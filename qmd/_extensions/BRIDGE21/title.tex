@@ -1,0 +1,16 @@
+\makeatletter
+\renewcommand{\maketitle}{%
+    \hbox{}
+    \vspace{1.25in}
+    \begin{center}
+        \huge\textbf{\textcolor{navyblue}{$title$}}\\[0.5em] % Adjust the 0.5em for spacing
+        $if(thanks)$\thanks{$thanks$}$endif$
+    \end{center}
+    \noindent % Ensures left alignment without indent
+    \Large{\textbf{\textcolor{lightblue}{DATE: $date$}}} % Left-aligned date
+    \par % End the line to maintain alignment
+    \normalsize
+}
+\makeatother
+
+

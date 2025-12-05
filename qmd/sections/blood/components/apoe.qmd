@@ -1,0 +1,21 @@
+```{r display apoe status from the kuadrc cohort}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_apoe
+
+apoe <- BRIDGE21::get_database_values(
+  ku_apoe1,
+  ku_apoe2,
+  data = data
+)
+
+params$kuadrc_apoe <- !all(apply(apoe, 2, is.na))
+
+if (!is.na(apoe[1]) & !is.na(apoe[2])) {
+  apoeCarrierStatus <- sprintf("E%s/E%s", apoe[1], apoe[2])
+  BRIDGE21::format_quarto("sections/blood/latex/apoe.tex", type = "input")
+  cat("\\textbf{YOUR APOE RESULT}: ", apoeCarrierStatus)
+  BRIDGE21::format_quarto(type = "newpage")
+}
+
+```

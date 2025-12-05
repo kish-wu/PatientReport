@@ -1,0 +1,17 @@
+```{r controller to decide whether to display an imaging section}
+#| echo: false
+#| eval: !expr (params$kuadrc_mri) | (params$kuadrc_pet)
+#| results: asis
+
+BRIDGE21::format_quarto("IMAGING SCANS", type = "section")
+
+```
+
+<!--- MRI Imaging --->
+
+{{< include sections/imaging/components/mri.qmd >}}
+
+<!--- PET Imaging --->
+
+{{< include sections/imaging/components/pet.qmd >}}
+

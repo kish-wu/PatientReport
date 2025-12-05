@@ -1,0 +1,45 @@
+\subsection{Your Brain Amyloid PET Scan}
+
+Researchers and clinicians can use positron emission tomography (PET) to measure your
+brain amyloid level in something called centiloids. Centiloids are a unit of measurement
+ranging from 0 to 100. Everyone has some amyloid in their brain, but having high levels
+means you have a high risk of developing memory changes. In individuals with Down
+syndrome a centiloid value of 18 or higher is considered high, meaning someone has a
+higher risk of developing memory changes.
+
+These pictures are not your PET scan, these are examples of people with different levels
+of amyloid in their brain. The red areas show the most amyloid close together, and yellow
+is amyloid spread out.
+
+\begin{center}
+    Low Levels of Amyloid \hspace{0.5cm} \rightarrow \hspace{0.5cm} High Levels of Amyloid 
+    \\ \vspace{0.5cm}
+    \includegraphics[width=1\textwidth]{{petScanImage}}
+\end{center}
+
+Your centiloid value is: {{centiloid}}
+
+Your Amyloid PET scan results showed that your amyloid level is {{amyloidHigh}}.
+
+\textbf{What do my results mean?}
+
+Taken together with your memory and thinking tests, this means:
+
+\tcbset{
+  myfullwidthbox/.style={
+    colback=red!10,   % light red background
+    colframe=red!50,  % red border
+    boxrule=0.5pt,    % border thickness
+    left=5pt,
+    right=5pt,
+    top=5pt,
+    bottom=5pt,
+    width=\textwidth,
+    arc=2mm,
+    boxsep=5pt,
+  }
+}
+
+\begin{tcolorbox}[myfullwidthbox]
+    {{petScanDescription}}
+\end{tcolorbox}

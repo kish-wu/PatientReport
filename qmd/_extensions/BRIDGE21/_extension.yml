@@ -1,0 +1,15 @@
+title: YOUR BRAIN HEALTH REPORT
+version: 1.0.0
+quarto-required: ">=1.5.0"
+contributes:
+  formats:
+    pdf:
+      template-partials:
+        - "title.tex"
+      include-in-header:
+        - "mytemplate.tex"
+      date: last-modified
+      date-format: long
+      mainfont: Times New Roman
+      monofont: Times New Roman
+      embed-resources: true

@@ -1,0 +1,83 @@
+---
+title: YOUR BRAIN HEALTH REPORT
+format:
+  BRIDGE21-pdf: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+#| echo: false
+#| message: false
+if (!require("devtools")) {
+  install.packages("devtools", repos = "http://cran.us.r-project.org")
+}
+if (!requireNamespace("BRIDGE21", quietly = TRUE)) {
+  stop("BRIDGE21 package is not installed. Install it from the project root before rendering.")
+}
+library(BRIDGE21)
+```
+
+Thank you for participating in the Program Name. You are helping to advance our understanding and treatment of Alzheimer's disease and related dementias in people with Down syndrome, offering hope to so many.
+
+As part of our study, you get feedback from experts on the research tests and measures we perform. This brain health report, created for you, puts this information back in your hands.
+
+
+## UNDERSTANDING YOUR REPORT
+
+The results in this report were obtained for research purposes for the Brain Health and Down Syndrome Cohort study. Although these research tests alone don't give a full view of your brain health, they are helping us to understand more about the brain. Remember, we're still piecing together the puzzle of brain science, and your role is essential in this. Some research findings may indicate a higher dementia risk. If you have cognitive symptoms, this information may be helpful in understanding and managing them.
+
+## SHARING YOUR RESULTS
+
+Discussing these research results with your doctor may be beneficial, especially for initiating discussions on memory changes. However, you may want to be cautious about having your research results sent directly to your physicians, as this typically results in them becoming a part of your medical record. Including these types of results in your medical record could have future implications for insurance or medical care.
+
+Consider your family's feelings before revealing any risk information, as it might directly affect them. We're here to address any concerns about sharing your report.
+
+## UNDERSTANDING THE LIMITATIONS OF THESE RESULTS
+
+These results come from tests that may still be in the research stage and may not yet be approved for general medical use. This means that sometimes the results might show higher or lower levels of the markers than a true result. It’s important to remember that these tests cannot, on their own, diagnose any condition. They should always be discussed with your research team, who can help interpret what they may mean in the context of your overall health.
+
+
+```{r load variable yaml file}
+#| echo: false
+#| message: false
+
+`%>%` <- magrittr::`%>%`
+
+params <- yaml::read_yaml("_variables.yaml")
+
+```
+
+```{r read data file stored locally and subset by id, ft.align="left"}
+#| echo: false
+#| message: false
+
+data <- readr::read_csv(
+  params$datafile,
+  show_col_types = FALSE
+)
+
+data <- data[data$ptid == params$id, ]
+
+# For Testing
+# data <- readr::read_csv(system.file("extdata/example.csv", package = "BRIDGE21"))
+
+```
+
+{{< include sections/demographics/demographics.qmd >}}
+
+{{< include sections/cognition/cognition.qmd >}}
+
+{{< include sections/imaging/imaging.qmd >}}
+
+{{< include sections/blood/blood.qmd >}}
+
+{{< include sections/lifestyle/lifestyle.qmd >}}
+
+![](sections/resources/TheSuperSix/TheSuperSix.png)
+
+\newpage
+
+# ADDITIONAL RESOURCES
+
+\input{sections/resources/latex/resources.tex}

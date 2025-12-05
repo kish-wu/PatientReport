@@ -1,0 +1,69 @@
+---
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r display ntgedsd calculated scores from the kuadrc cohort, ft.align="left"}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_ntgedsd
+
+ntgedsd_domains <- list(
+  all = "Total Score",
+  adl = "Activities of Daily Living",
+  lang = "Language & Communication",
+  sleep = "Sleep–Wake Change Patterns",
+  amb = "Ambulation",
+  mem = "Memory",
+  beh = "Behavior & Affect",
+  self = "Adult’s Self-Report Problems",
+  other = "Significant Changes Observed by Others"
+)
+
+ntgedsd_df <- purrr::imap_dfc(
+  ntgedsd_domains,
+  ~ BRIDGE21::calculate_ntgedsd(
+    ntgedsd_df,
+    domain = .y,
+    label = .x
+  )
+)
+
+BRIDGE21::format_quarto(
+  "sections/cognition/latex/ntgedsd.tex",
+  type = "input"
+)
+
+ntgedsd_df %>%
+  dplyr::mutate(date_of_visit = visit$formatted_date_of_visit) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::all_of(unname(unlist(ntgedsd_domains))),
+    names_to = "Category"
+  ) %>%
+  tidyr::pivot_wider(
+    names_from = date_of_visit,
+    values_from = value
+  ) %>%
+  flextable::flextable() %>%
+  flextable::width(j = 1, width = 3) %>%
+  flextable::width(j = 2:(nrow(ntgedsd_df) + 1), width = 1.15) %>%
+  flextable::bold(j = 2:(nrow(ntgedsd_df) + 1), part = "header") %>%
+  flextable::align(
+    j = 2:(nrow(ntgedsd_df) + 1),
+    part = "all",
+    align = "center"
+  )
+
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```
+
+```{r display ntgedsd calculated scores from the bold study, ft.align="left"}
+#| echo: false
+#| results: asis
+#| eval: !expr params$bold_ntgedsd
+
+# Add bold ntgedsd here...
+
+```

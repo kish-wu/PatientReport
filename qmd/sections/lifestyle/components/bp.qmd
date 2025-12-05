@@ -1,0 +1,71 @@
+```{r display the blood pressure plot and table for the kuadrc cohort}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_blood_pressure
+
+blood_pressure <- blood_pressure %>%
+  dplyr::mutate(
+    bpsys_cat = BRIDGE21:::classify_blood_pressure(bpsys, type = "systolic"),
+    bpdias_cat = BRIDGE21:::classify_blood_pressure(bpdias, type = "diastolic"),
+    bp_cat = dplyr::case_when(
+      bpsys_cat == "Low" | bpdias_cat == "Low" ~ "Low BP",
+      bpsys_cat == "Normal" & bpdias < 80 ~ "Normal",
+      bpsys_cat == "Elevated" & bpdias < 80 ~ "Elevated",
+      bpsys_cat == "High" | bpdias >= 80 ~ "High",
+      TRUE ~ "Normal"
+    )
+  )
+
+BRIDGE21::format_quarto("sections/lifestyle/latex/bp.tex", type = "input")
+blood_pressure$date_of_visit <- visit$formatted_date_of_visit
+
+bpft <-
+  blood_pressure %>%
+  dplyr::select(date_of_visit, bpsys, bpdias, bp_cat) %>%
+  flextable::flextable() %>%
+  flextable::set_header_labels(
+    values = c("Date", "Systolic", "Diastolic", "Cateogry")
+  ) %>%
+  flextable::width(j = 1:3, width = 0.7) %>%
+  flextable::width(j = 4, width = 1.25) %>%
+  flextable::align(j = 1:4, part = "all", align = "center") %>%
+  flextable::bold(i = 1, part = "header") %>%
+  flextable::height(height = 0.25) %>%
+  flextable::hrule(rule = "exact")
+
+bp_plot <-
+  BRIDGE21::generate_bp_plot(
+    bpsys = blood_pressure$bpsys[length(blood_pressure$bpsys)],
+    bpdia = blood_pressure$bpdias[length(blood_pressure$bpdias)]
+  ) +
+  patchwork::inset_element(
+    flextable::gen_grob(bpft, fit = "width"),
+    left = 0.05,
+    bottom = 0.6,
+    right = 0.5,
+    top = 0.85
+  ) +
+  patchwork::inset_element(
+    grid::textGrob(
+      label = "Blood Pressure History",
+      gp = grid::gpar(fontface = "bold")
+    ),
+    left = 0.05,
+    bottom = 0.87,
+    right = 0.5,
+    top = 0.87
+  )
+
+ggplot2::ggsave(
+  filename = "bp_plot.png",
+  plot = bp_plot,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+
+cat(paste0("", "![](bp_plot.png)", ""), sep = "\n")
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```

@@ -1,0 +1,48 @@
+```{r pet imaging}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_pet
+
+cognitiveDecline <- TRUE
+
+abeta_df <- BRIDGE21::get_database_values(
+  centiloid_apet,
+  img_scan_date_apet,
+  data = data,
+  event_name = redcap_event_name
+)
+
+abeta_df$img_scan_date_apet <- format(
+  as.Date(abeta_df$img_scan_date_apet, tryFormats = c("%m/%d/%y", "%m/%d/%Y")),
+  "%B %d, %Y"
+)
+
+petScanDescription <- BRIDGE21:::pet_amyloid_description(
+  centiloid = abeta_df$centiloid_apet,
+  cognitive_decline = cognitiveDecline,
+  petScanDate = abeta_df$img_scan_date_apet
+)
+
+centiloid <- abeta_df$centiloid_apet[nrow(abeta_df)]
+
+if (length(centiloid) >= 1) {
+  ltex <- paste(
+    #readLines("inst/qmd/sections/imaging/latex/pet.tex"),
+    readLines("sections/imaging/latex/pet.tex"),
+    collapse = "\n"
+  )
+  ltex <- glue::glue(
+    ltex,
+    petScanImage = "{sections/imaging/latex/images/pet_amyloid.jpeg}",
+    centiloid = centiloid,
+    amyloidHigh = ifelse(centiloid >= 19, "high", "not high"),
+    petScanDescription = petScanDescription,
+    .open = "{{",
+    .close = "}}"
+  )
+  cat(paste0("", ltex, ""), sep = "\n")
+}
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```

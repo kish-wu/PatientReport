@@ -1,0 +1,49 @@
+---
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r display dsmse calculated scores from the kuadrc cohort, ft.align="left"}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_dsmse
+
+BRIDGE21::format_quarto("sections/cognition/latex/dsmse.tex", type = "input")
+
+dsmse_labels <- c("Total Score", "Visual Spatial", "Memory", "Language")
+
+dsmse_df %>%
+  dplyr::mutate(
+    date_of_visit = visit$formatted_date_of_visit,
+    dsmemtot = dssmtot2 + dsmmtot2
+  ) %>%
+  dplyr::select(date_of_visit, dsmsett2, dsvistt2, dsmemtot, dslgtot2) %>%
+  flextable::flextable() %>%
+  flextable::set_header_labels(values = c("Date", dsmse_labels)) %>%
+  flextable::width(j = 1:5, width = 1.15) %>%
+  flextable::align(j = 1:5, align = "center", part = "all") %>%
+  flextable::bold(j = 1:5, part = "header") %>%
+  flextable::add_footer_row(values = "Max Score: 103", colwidths = 5)
+
+
+if (params$kuadrc_dsmse & params$kuadrc_mcrt) {
+  BRIDGE21::format_quarto(type = "newpage")
+}
+
+if (params$kuadrc_dsmse & !params$kuadrc_mcrt) {
+  BRIDGE21::format_quarto(
+    "sections/cognition/latex/after-memory.tex",
+    type = "input"
+  )
+}
+
+```
+
+```{r display dsmse calculated scores from the bold study, ft.align="left"}
+#| echo: false
+#| results: asis
+#| eval: !expr params$bold_dsmse
+
+# Add bold mcrt here...
+
+```

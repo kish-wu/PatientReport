@@ -1,0 +1,61 @@
+
+
+
+
+```{r decide whether to show cognition based on available kuadrc data}
+#| echo: false
+#| eval: !expr params$kuadrc_cognition
+#| results: asis
+
+# Down Syndrome Mental Status Exam
+dsmse_variables <- c("dsmsett2", "dsvistt2", "dssmtot2", "dsmmtot2", "dslgtot2")
+dsmse_df <- BRIDGE21::get_database_values(!!!dsmse_variables, data = data)
+if (all(apply(dsmse_df[, dsmse_variables], 2, is.na))) {
+  params$kuadrc_dsmse <- FALSE
+}
+
+
+# Modified Cued Recall Test
+mcrt_variables <- c("dscrttfr", "dsccttcr")
+mcrt_df <- BRIDGE21::get_database_values(!!!mcrt_variables, data = data)
+if (all(apply(mcrt_df[, mcrt_variables], 2, is.na))) {
+  params$kuadrc_mcrt <- FALSE
+}
+
+
+# National Task Group - Early Detection and Screen for Dementia (NTG-EDSD)
+ntgedsd <- colnames(dplyr::select(data, dsadl1:dsother6))
+ntgedsd_df <- BRIDGE21::get_database_values(!!!ntgedsd, data = data)
+if (rlang::is_empty(ntgedsd_df)) {
+  params$kuadrc_ntgedsd <- FALSE
+}
+
+if (params$kuadrc_dsmse | params$kuadrc_mcrt | params$kuadrc_ntgedsd) {
+  BRIDGE21::format_quarto(
+    "MEMORY AND THINKING TEST SCORES",
+    type = "section"
+  )
+}
+
+```
+
+```{r decide whether to show cognition based on available bold data}
+#| echo: false
+#| eval: !expr params$bold_cognition
+
+# Add bold checks here...
+
+```
+
+
+<!--- Down Syndrom Mental Status Exam --->
+
+{{< include sections/cognition/components/dsmse.qmd >}}
+
+<!--- Modified Cued Recall Test --->
+
+{{< include sections/cognition/components/mcrt.qmd >}}
+
+<!--- National Task Group - Early Detection and Screen for Dementia (NTG-EDSD) --->
+
+{{< include sections/cognition/components/ntgedsd.qmd >}}

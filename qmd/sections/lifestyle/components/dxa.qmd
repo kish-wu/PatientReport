@@ -1,0 +1,85 @@
+
+```{r display body composition table and plot for the kuadrc cohort, ft.align = "left"}
+#| echo: false
+#| results: asis
+#| eval: !expr params$kuadrc_dxa
+
+dxa$fittest_date <- as.Date(
+  dxa$fittest_date,
+  tryFormats = c("%m/%d/%y", "%m/%d/%Y")
+)
+
+dxa[dxa == -999] <- NA
+
+dxa_labels <- c("Date", "Weight", "Lean Tissue", "Fat Tissue", "Fat (%)", "BMD")
+
+if (all(is.na(dxa$dxa_bmd_z))) {
+  dxa$dxa_bmd_z <- NULL
+  dxa_labels <- dxa_labels[1:5]
+}
+
+dxa <- dxa %>%
+  dplyr::mutate(
+    dplyr::across(lean:fat, ~ .x / 1000),
+    dplyr::across(mass:fat, ~ round(.x * 2.205, 1))
+  )
+
+body_fat_percent_plot <- BRIDGE21::generate_body_fat_plot(
+  total_fat = tail(na.omit(dxa$total_fat), 1),
+  subject_sex = visit$sex[1],
+  subject_birthdate = intake$subject_birthdate,
+  fittest_date = tail(na.omit(dxa$fittest_date), 1)
+)
+
+# Adjust alignment on Quarto ouput
+body_fat_percent_plot <- body_fat_percent_plot +
+  ggplot2::theme(plot.margin = ggplot2::margin(t = -30))
+
+ggplot2::ggsave(
+  filename = "body_fat_percent_plot.png",
+  plot = body_fat_percent_plot,
+  width = 8,
+  height = 2,
+  dpi = 300
+)
+
+BRIDGE21::format_quarto("sections/lifestyle/latex/dxa.tex", type = "input")
+
+ft_footnote <- "Weight, Lean Tissue, and Fat Tissue Measured in Pounds"
+
+if ("dxa_bmd_z" %in% colnames(dxa)) {
+  ft_footnote <- BRIDGE21::add_string(
+    ft_footnote + "\n" + "BMD: Bone Mineral Density (Z-score)"
+  )
+}
+
+dxa %>%
+  dplyr::mutate(fittest_date = format(fittest_date, "%m/%d/%Y")) %>%
+  flextable::flextable() %>%
+  flextable::set_header_labels(
+    values = dxa_labels
+  ) %>%
+  flextable::width(j = 1:ncol(dxa), width = 1) %>%
+  flextable::align(part = "all", align = "center") %>%
+  flextable::bold(part = "header") %>%
+  flextable::add_footer_row(
+    values = ft_footnote,
+    colwidths = ncol(dxa)
+  )
+
+
+paste("", "![](body_fat_percent_plot.png)", "") |>
+  cat(sep = "\n")
+
+if ("dxa_bmd_z" %in% colnames(dxa)) {
+  BRIDGE21::format_quarto("sections/lifestyle/latex/bmd.tex", type = "input")
+}
+
+BRIDGE21::format_quarto(
+  "sections/lifestyle/latex/after-dxa.tex",
+  type = "input"
+)
+
+BRIDGE21::format_quarto(type = "newpage")
+
+```
